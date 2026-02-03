@@ -1,6 +1,8 @@
 from django.urls import path, include
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+
+# the global URL patterns for the project
 urlpatterns = [
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"), 
     path(
