@@ -5,6 +5,10 @@ from film.models import Film, Comment
 from film.serializers import FilmSerializer, CommentSerializer
 from film.services.sync import sync_films
 from rest_framework import generics, filters
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.utils.timezone import now
 
 
 
@@ -35,3 +39,15 @@ class CommentListCreateView(generics.ListCreateAPIView):
             Film, id=self.kwargs["film_id"]
         )
         serializer.save(film=film)
+
+class HealthCheckView(APIView):
+    """
+    Simple health check endpoint to verify that the app is running.
+    """
+    def get(self, request, *args, **kwargs):
+        data = {
+            "status": "ok",
+            "message": "Application is running",
+            "timestamp": now()
+        }
+        return Response(data, status=status.HTTP_200_OK)
