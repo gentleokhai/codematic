@@ -61,6 +61,25 @@ REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",  # Unauthenticated users
+        "rest_framework.throttling.UserRateThrottle",  # Authenticated users
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "500/day",    # 500 requests per day per IP
+        "user": "1000/day",   # 1000 requests per day per authenticated user
+    }
+}
+
+# settings.py
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
 }
 
 
