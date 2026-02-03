@@ -9,13 +9,6 @@ class FilmSerializer(serializers.ModelSerializer):
         fields = ["id", "title", "release_date", "comment_count"]
 
 
-# class CommentSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Comment
-#         fields = ["id", "text", "created_at"]
-
-
-
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
