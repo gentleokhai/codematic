@@ -3,7 +3,7 @@ from django.db.models import Count
 from rest_framework import generics, filters
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from film.models import Film, Comment
 from film.serializers import FilmSerializer, CommentSerializer
 
@@ -31,8 +31,14 @@ class FilmListView(generics.ListAPIView):
             cache.set(cache_key, films, CACHE_TIMEOUT)
         return films
 
+
+class CommentCreateThrottle(UserRateThrottle):
+    rate = "20/hour"  # max 20 comments per user per hour
+
 class CommentListCreateView(generics.ListCreateAPIView):
     serializer_class = CommentSerializer
+    throttle_classes = [CommentCreateThrottle]
+
 
     def get_queryset(self):
         return Comment.objects.filter(film_id=self.kwargs["film_id"])
