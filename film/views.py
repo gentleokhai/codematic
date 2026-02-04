@@ -10,27 +10,57 @@ from film.serializers import FilmSerializer, CommentSerializer
 
 CACHE_TIMEOUT = 60 * 5  # 5 minutes
 
+# class FilmListView(generics.ListAPIView):
+#     serializer_class = FilmSerializer
+#     filter_backends = [filters.SearchFilter]
+#     search_fields = ["title"]
+
+#     def get_queryset(self):
+#         search = self.request.query_params.get("search", "")
+#         cache_key = f"films:list:search={search}"
+
+#         # Try to get from cache
+#         films = cache.get(cache_key)
+#         if films is None:
+#             # Query DB if not cached
+#             qs = Film.objects.annotate(comment_count=Count("comments")).order_by("release_date")
+#             if search:
+#                 qs = qs.filter(title__icontains=search)
+
+#             films = FilmSerializer(qs, many=True).data
+#             cache.set(cache_key, films, CACHE_TIMEOUT)
+#         return films
+
+
 class FilmListView(generics.ListAPIView):
     serializer_class = FilmSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ["title"]
 
-    def get_queryset(self):
-        search = self.request.query_params.get("search", "")
+    def list(self, request, *args, **kwargs):
+        search = request.query_params.get("search", "")
         cache_key = f"films:list:search={search}"
 
-        # Try to get from cache
-        films = cache.get(cache_key)
-        if films is None:
-            # Query DB if not cached
-            qs = Film.objects.annotate(comment_count=Count("comments")).order_by("release_date")
-            if search:
-                qs = qs.filter(title__icontains=search)
+        cached = cache.get(cache_key)
+        if cached:
+            return Response(cached)
 
-            films = FilmSerializer(qs, many=True).data
-            cache.set(cache_key, films, CACHE_TIMEOUT)
-        return films
+        #  Sync from SWAPI if DB is empty
+        if not Film.objects.exists():
+            from film.services.sync import sync_films
+            sync_films()
 
+        qs = Film.objects.annotate(
+            comment_count=Count("comments")
+        ).order_by("release_date")
+
+        if search:
+            qs = qs.filter(title__icontains=search)
+
+        serializer = self.get_serializer(qs, many=True)
+        cache.set(cache_key, serializer.data, CACHE_TIMEOUT)
+
+        return Response(serializer.data)
 
 class CommentCreateThrottle(UserRateThrottle):
     rate = "20/hour"  # max 20 comments per user per hour
