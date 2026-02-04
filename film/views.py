@@ -77,7 +77,7 @@ class CommentListCreateView(generics.ListCreateAPIView):
         film = get_object_or_404(Film, id=self.kwargs["film_id"])
         serializer.save(film=film)
 
-        # Invalidate ALL film list caches
-        keys = cache.keys("films:list:*")  # works with Redis backend
-        if keys:
-            cache.delete_many(keys)
+        # # Invalidate ALL film list caches
+        # keys = cache.keys("films:list:*")  # works with Redis backend
+        # if keys:
+        #     cache.delete_many(keys)
